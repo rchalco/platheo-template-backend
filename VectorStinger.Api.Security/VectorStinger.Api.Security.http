@@ -1,0 +1,6 @@
+@RoomsySecurity.ApiService_HostAddress = http://localhost:5212
+
+GET {{RoomsySecurity.ApiService_HostAddress}}/swagger/index.html
+Accept: application/json
+
+###

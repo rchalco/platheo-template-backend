@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../VectorStinger.Core/VectorStinger.Core.csproj" />
+    <ProjectReference Include="../VectorStinger.Infrastructure.OAuth/VectorStinger.Infrastructure.OAuth.csproj" />
+    <ProjectReference Include="../VectorStinger.Modules.Security/VectorStinger.Modules.Security.csproj" />
+    <ProjectReference Include="../VectorStinger.Foundation.Abstractions/VectorStinger.Foundation.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UserCase\WebTemplate\DownloadJSONTemplate\" />
+    <Folder Include="UserCase\WebTemplate\UploadJSONTemplate\" />
+    <Folder Include="UserCase\WebTemplate\RegisterTemplate\" />
+  </ItemGroup>
+
+</Project>
