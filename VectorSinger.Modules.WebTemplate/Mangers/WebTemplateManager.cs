@@ -16,7 +16,7 @@ namespace VectorSinger.Modules.WebTemplate.Mangers
            
         }
 
-        public Result<ResoponseRegisterTemplateWebDTO> RegisterTemplateWebHandle(RequestRegisterTemplateWebDTO request)
+        public Result<ResponseRegisterTemplateWebDTO> RegisterTemplateWebHandle(RequestRegisterTemplateWebDTO request)
         {
             throw new NotImplementedException();
         }

@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Core.Domain.Managers.Security.AccountManager.VerifyCredentialOAuth
 {
-    public record VerifyCredentialOAuthRequestDTO
-    {
-        public ProviderEnum Provider { get; set; } = ProviderEnum.none;
-        public string Token { get; set; } = string.Empty;
-    }
+    public record VerifyCredentialOAuthRequestDTO(
+        ProviderEnum Provider,
+        string Token);
 
     public enum ProviderEnum
     {

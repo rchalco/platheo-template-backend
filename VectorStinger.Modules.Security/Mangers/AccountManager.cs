@@ -30,7 +30,7 @@ namespace VectorStinger.Modules.Security.Mangers
             var outputTokenExpiration = new Parameter<DateTime>(DateTime.Now);
             var outputDetailResponse = new Parameter<string>(string.Empty, ParameterType.Out, 100);
 
-            _repository.CallProcedure<VerifyCredentialResponseDTO>("[seguridad].[spLogin]",
+            _repository.CallProcedure<object>("[seguridad].[spLogin]",
                 request.User,
                 request.Password,
                 request.VersionApplication,
@@ -44,13 +44,11 @@ namespace VectorStinger.Modules.Security.Mangers
                 return Result.Fail(outputDetailResponse.Value);
             }
 
-            var response = new VerifyCredentialResponseDTO
-            {
-                IsValid = outputSuccess.Value,
-                Token = outputToken.Value,
-                Expiration = outputTokenExpiration.Value,
-                Message = outputDetailResponse.Value
-            };
+            var response = new VerifyCredentialResponseDTO(
+                outputSuccess.Value,
+                outputToken.Value,
+                outputTokenExpiration.Value,
+                outputDetailResponse.Value);
 
             return Result.Ok(response);
         }
@@ -69,12 +67,10 @@ namespace VectorStinger.Modules.Security.Mangers
                 return Result.Fail("Token expirado");
             }
 
-            var response = new ValidateTokenResponse
-            {
-                IsValid = true,
-                TimeExpired = result.First().FechaVigenciaHasta,
-                Token = result.First().Token.ToString()
-            };
+            var response = new ValidateTokenResponse(
+                true,
+                result.First().Token.ToString(),
+                result.First().FechaVigenciaHasta);
 
             return Result.Ok(response);
         }
@@ -171,17 +167,15 @@ namespace VectorStinger.Modules.Security.Mangers
             });
 
             // Asignamos los valores de respuesta
-            var response = new VerifyCredentialOAuthResponseDTO
-            {
-                Expiration = session.FechaVigenciaHasta,
-                IsValid = true,
-                Token = session.Token.ToString(),
-                Message = "Usuario autenticado correctamente",
-                NamePerson = verifyResult.Value.Name,
-                PictureUrl = verifyResult.Value.Picture,
-                IdUser = userResult.First().IdUsuario,
-                IdSesion = session.IdSesion
-            };
+            var response = new VerifyCredentialOAuthResponseDTO(
+                true,
+                userResult.First().IdUsuario,
+                session.IdSesion,
+                session.Token.ToString(),
+                session.FechaVigenciaHasta,
+                "Usuario autenticado correctamente",
+                verifyResult.Value.Name,
+                verifyResult.Value.Picture);
 
             return Result.Ok(response);
         }

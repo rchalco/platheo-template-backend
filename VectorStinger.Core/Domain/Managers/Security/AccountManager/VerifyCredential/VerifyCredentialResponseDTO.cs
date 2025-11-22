@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Core.Domain.Managers.Security.AccountManager.VerifyCredential
 {
-    public record  VerifyCredentialResponseDTO
-    {
-        public bool IsValid { get; set; }
-        public string Token { get; set; } = string.Empty;
-        public DateTime Expiration { get; set; }
-        public string Message { get; set; } = string.Empty;
-    }
+    public record VerifyCredentialResponseDTO(
+        bool IsValid,
+        string Token,
+        DateTime Expiration,
+        string Message);
 }

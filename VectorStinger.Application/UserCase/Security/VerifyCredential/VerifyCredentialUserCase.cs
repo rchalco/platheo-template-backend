@@ -24,12 +24,10 @@ namespace VectorStinger.Application.UserCase.Security.VerifyCredential
 
         public override async Task<Result<VerifyCredentialOutput>> ExecuteBusinessAsync(VerifyCredentialInput input)
         {
-            var resultAuthentication =  _accountManager.VerifyCredentialAsync(new VerifyCredentialRequestDTO
-            {
-                User = input.User,
-                Password = input.Password,
-                VersionApplication = input.VersionApplication
-            });
+            var resultAuthentication =  _accountManager.VerifyCredentialAsync(new VerifyCredentialRequestDTO(
+                input.User,
+                input.Password,
+                input.VersionApplication));
 
             if (resultAuthentication.IsFailed)
             {

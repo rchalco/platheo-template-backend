@@ -26,10 +26,7 @@ namespace VectorStinger.Application.UserCase.Security.ValidateToken
 
         public override async Task<Result<ValidateTokenOutPut>> ExecuteBusinessAsync(ValidateTokenInput input)
         {
-            var resulValidation =  _accountManager.ValidateTokenAsync(new ValidateTokenRequest
-            {
-                Token = input.Token
-            });
+            var resulValidation =  _accountManager.ValidateTokenAsync(new ValidateTokenRequest(input.Token));
             if (resulValidation.IsFailed)
             {
                 return Result.Fail<ValidateTokenOutPut>(resulValidation.Errors);

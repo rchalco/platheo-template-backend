@@ -54,10 +54,7 @@ public class SessionTokenValidationMiddleware
             using var scope = context.RequestServices.CreateScope();
             var accountManager = scope.ServiceProvider.GetRequiredService<IAccountManager>();
 
-            var resultTokenValidation = accountManager.ValidateTokenAsync(new ValidateTokenRequest
-            {
-                Token = token
-            });
+            var resultTokenValidation = accountManager.ValidateTokenAsync(new ValidateTokenRequest(token));
 
             if (resultTokenValidation.IsSuccess && resultTokenValidation.Value != null && resultTokenValidation.Value.IsValid)
             {

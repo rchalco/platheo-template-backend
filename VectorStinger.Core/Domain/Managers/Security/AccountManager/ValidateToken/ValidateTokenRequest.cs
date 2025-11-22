@@ -6,8 +6,5 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Core.Domain.Managers.Security.AccountManager.ValidateToken
 {
-    public record ValidateTokenRequest
-    {
-        public string Token { get; set; } = string.Empty;
-    }
+    public record ValidateTokenRequest(string Token);
 }

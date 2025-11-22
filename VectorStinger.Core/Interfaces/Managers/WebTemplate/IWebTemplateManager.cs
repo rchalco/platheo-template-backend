@@ -11,7 +11,7 @@ namespace VectorStinger.Core.Interfaces.Managers.WebTemplate
 {
     public interface IWebTemplateManager
     {
-        Result<ResoponseRegisterTemplateWebDTO> RegisterTemplateWebHandle(RequestRegisterTemplateWebDTO request);
+        Result<ResponseRegisterTemplateWebDTO> RegisterTemplateWebHandle(RequestRegisterTemplateWebDTO request);
 
     }
 }
