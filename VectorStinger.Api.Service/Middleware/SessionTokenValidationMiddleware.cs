@@ -17,7 +17,10 @@ public class SessionTokenValidationMiddleware
         "/swagger",                      // Swagger UI
         "/swagger/index.html",           // Swagger UI principal
         "/swagger/v1/swagger.json",      // Swagger JSON
-        "/ValidateTokenUseCase"
+        "/ValidateTokenUseCase",
+        "/health",                       // Health check endpoint
+        "/alive",                        // Alive endpoint
+        "/ready",                        // Ready endpoint
     };
 
     public SessionTokenValidationMiddleware(RequestDelegate next, IMemoryCache cache)

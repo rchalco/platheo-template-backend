@@ -1,19 +1,12 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Net;
+using VectorStinger.Api.Service.Middleware;
 using VectorStinger.Application.Configurations;
 using VectorStinger.Core.Configurations;
-using VectorStinger.Core.Interfaces.Managers.Security;
-using VectorStinger.Infrastructure.DataAccess.Implement.SQLServer;
-using VectorStinger.Infrastructure.DataAccess.Interface;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using VectorStinger.Modules.Security.Mangers;
-using VectorStinger.Api.Service.Middleware;
-using VectorStinger.Host.ServiceDefaults;
 using VectorStinger.Foundation.Abstractions.UserCase;
-using System.Collections.Generic;
-using System.Net;
-using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.RateLimiting;
+using VectorStinger.Host.ServiceDefaults;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 public class Program
 {
@@ -46,6 +39,9 @@ public class Program
         // Add services to the container.
         builder.Services.AddAuthorization();
 
+        // Health checks
+        builder.Services.AddHealthChecks();
+
         // Configuración de CORS
         builder.Services.AddCors(options =>
         {
@@ -73,8 +69,15 @@ public class Program
         List<VectorStingerFolder> roomsyFolders = builder.Configuration.GetSection("Folders").Get<List<VectorStingerFolder>>()!;
         builder.Services.RegisterFoldersConfiguration(roomsyFolders);
 
+        
         List<Type> userCaseTypes = new List<Type>();
-        var serviceUserCase = builder.Services.RegisterUserCases(userCaseTypes, databaseSettings!);
+        
+        // Solo registrar UserCases si el connection string está configurado
+        if (!string.IsNullOrEmpty(databaseSettings?.DefaultConnection))
+        {
+            var serviceUserCase = builder.Services.RegisterUserCases(userCaseTypes, databaseSettings!, builder.Configuration);
+        }
+        
         builder.Services.AddMemoryCache();
         builder.Services.AddApplicationInsightsTelemetry();
 
@@ -87,6 +90,9 @@ public class Program
 
         var app = builder.Build();
 
+        // Health check endpoint - EXPLÍCITO para asegurar que funciona
+        app.MapHealthChecks("/health");
+        
         app.MapDefaultEndpoints();
 
         // Configure the HTTP request pipeline.

@@ -3,7 +3,7 @@ using VectorStinger.Foundation.Abstractions.UserCase;
 
 namespace VectorStinger.Application.UserCase.Security.VerifyCredentialOAuth
 {
-    public class VerifyCredentialOAuthValidation : UserCaseValidation<VerifyCredentialOAuthInput>
+    public class VerifyCredentialOAuthValidation : UseCaseValidation<VerifyCredentialOAuthInput>
     {
         public VerifyCredentialOAuthValidation()
         {

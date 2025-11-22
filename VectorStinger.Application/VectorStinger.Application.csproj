@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,12 +15,13 @@
     <ProjectReference Include="../VectorStinger.Infrastructure.OAuth/VectorStinger.Infrastructure.OAuth.csproj" />
     <ProjectReference Include="../VectorStinger.Modules.Security/VectorStinger.Modules.Security.csproj" />
     <ProjectReference Include="../VectorStinger.Foundation.Abstractions/VectorStinger.Foundation.Abstractions.csproj" />
+    <ProjectReference Include="..\VectorSinger.Modules.WebTemplate\VectorSinger.Modules.WebTemplate.csproj" />
+    <ProjectReference Include="..\VectorStinger.Infrastructure.Bucket\VectorStinger.Infrastructure.Bucket.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="UserCase\WebTemplate\DownloadJSONTemplate\" />
     <Folder Include="UserCase\WebTemplate\UploadJSONTemplate\" />
-    <Folder Include="UserCase\WebTemplate\RegisterTemplate\" />
   </ItemGroup>
 
 </Project>

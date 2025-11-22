@@ -1,0 +1,50 @@
+# Archivos de build y binarios
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+
+# Archivos de Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Archivos de desarrollo
+*.Development.json
+appsettings.Development.json
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentación
+*.md
+README.md
+LICENSE
+
+# Node modules (si hay frontend)
+**/node_modules/
+**/npm-debug.log
+
+# Archivos de caché
+**/.vs/
+**/.vscode/
+**/launchSettings.json
+
+# Archivos temporales
+**/tmp/
+**/.tmp/
+**/*.tmp
+**/*.log
+
+# Certificados locales de desarrollo (se copiarán explícitamente si se necesitan)
+**/*.pfx

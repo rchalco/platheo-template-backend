@@ -8,5 +8,6 @@ namespace VectorStinger.Core.Domain.Managers.WebTemplate.RegisterTemplateWebHand
 {
     public class RequestRegisterTemplateWebDTO
     {
+        //Cometario de test Ronald
     }
 }

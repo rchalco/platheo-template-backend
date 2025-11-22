@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  api-dev:
+    build:
+      context: ..
+      dockerfile: VectorStinger.Container/Dockerfile
+    container_name: platheo-api-dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DB_PASSWORD=Iodfa09//)=00
+      - PAYMENT_SECRET_KEY=XztyudJDljlloppo
+      - APPINSIGHTS_CONNECTION_STRING=InstrumentationKey=4b7be4df-2001-446d-9871-27e79477c205;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=149ab4ba-30f6-4f58-a32a-aad9e6683bb7
+    ports:
+      - "8034:8080"
+    volumes:
+      - ../images:/app/images
+    networks:
+      - platheo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+  api-stage:
+    build:
+      context: ..
+      dockerfile: VectorStinger.Container/Dockerfile
+    container_name: platheo-api-stage
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Stage
+      - ASPNETCORE_URLS=http://+:8080
+      - DB_PASSWORD=${DB_PASSWORD_STAGE}
+      - PAYMENT_SECRET_KEY=${PAYMENT_SECRET_KEY}
+      - APPINSIGHTS_CONNECTION_STRING=${APPINSIGHTS_CONNECTION_STRING}
+    ports:
+      - "8035:8080"
+    volumes:
+      - ../images:/app/images
+    networks:
+      - platheo-network
+    restart: unless-stopped
+    profiles:
+      - stage
+
+  api-prod:
+    build:
+      context: ..
+      dockerfile: VectorStinger.Container/Dockerfile
+    container_name: platheo-api-prod
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - DB_PASSWORD=${DB_PASSWORD_PROD}
+      - PAYMENT_SECRET_KEY=${PAYMENT_SECRET_KEY}
+      - APPINSIGHTS_CONNECTION_STRING=${APPINSIGHTS_CONNECTION_STRING}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../images:/app/images
+    networks:
+      - platheo-network
+    restart: always
+    profiles:
+      - production
+
+networks:
+  platheo-network:
+    driver: bridge

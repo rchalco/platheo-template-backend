@@ -45,7 +45,7 @@ dotnet tool install --global dotnet-ef --version 9.*
 Ejecutar el siguiente comando desde el directorio: `./VectorStingerAPI/Core.VectorStingerKernel`
 
 ```bash
-dotnet ef dbcontext scaffold "Data Source=YOUR_SERVER;Initial Catalog=YOUR_DB;Persist Security Info=False;User ID=YOUR_USER;Password=YOUR_PASSWORD;Trust Server Certificate=True" Microsoft.EntityFrameworkCore.SqlServer --context-dir Domain\DataBase\Data --output-dir Domain\DataBase\Models --force
+dotnet ef dbcontext scaffold 'Data Source=platheo-srvbd00.database.windows.net;Initial Catalog=BD-Platheo-Template;Persist Security Info=True;User ID=XXXXXXXX;Password="XXXXXXX";Pooling=False;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Command Timeout=0' Microsoft.EntityFrameworkCore.SqlServer --context-dir Domain\DataBase\DataContext --output-dir Domain\DataBase\Models --force
 ```
 
 **Nota:** Actualice la cadena de conexión con sus propios valores de servidor, base de datos, usuario y contraseña.

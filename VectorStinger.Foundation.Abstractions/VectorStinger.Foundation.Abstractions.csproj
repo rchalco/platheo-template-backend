@@ -7,18 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="HostPost\**" />
+    <Compile Remove="UserCase\Admin\**" />
+    <EmbeddedResource Remove="HostPost\**" />
+    <EmbeddedResource Remove="UserCase\Admin\**" />
+    <None Remove="HostPost\**" />
+    <None Remove="UserCase\Admin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../VectorStinger.Infrastructure.DataAccess/VectorStinger.Infrastructure.DataAccess.csproj" />
     <ProjectReference Include="../VectorStinger.Foundation.Utilities/VectorStinger.Foundation.Utilities.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="HostPost\" />
-    <Folder Include="UserCase\Admin\" />
   </ItemGroup>
 
 </Project>

@@ -17,7 +17,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
     public abstract class BaseUseCase<T, V, W> : IUserCase
         where T : class, IUseCaseInput
         where V : class, IUseCaseOutput
-        where W : UserCaseValidation<T>
+        where W : UseCaseValidation<T>
     {
         #region Properties
         public string Description { get; set; } = "User Case";
@@ -27,7 +27,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
 
         #region Private Fields
         private readonly T _userCaseInput;
-        private readonly UserCaseValidation<T> _validationRules;
+        private readonly UseCaseValidation<T> _validationRules;
         private readonly IRepository _repository;
         private readonly ILogger _logger;
         private static readonly ActivitySource ActivitySource = new("BaseUseCase");

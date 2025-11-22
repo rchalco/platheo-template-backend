@@ -17,7 +17,7 @@ public class FirebaseAuthenticationTests
         var result = await firebaseAuthentication.AuthenticateAsync(providerName, accessToken);
 
         // Assert
-        Assert.NotEqual(null, result);
+        Assert.NotNull(result);
     }
 }
 

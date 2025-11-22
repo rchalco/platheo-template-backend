@@ -1,0 +1,332 @@
+# ========================================
+# Azure DevOps Pipeline - Deploy to Stage
+# ========================================
+# 
+# Este pipeline:
+# 1. Construye la imagen Docker para ambiente Stage
+# 2. Sube la imagen a Azure Container Registry (ACR)
+# 3. Despliega la imagen en Azure Container Apps (ACA)
+# 4. Usa las variables de entorno configuradas en ACA
+#
+# ========================================
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - VectorStinger.Api.Service/**
+      - VectorStinger.Application/**
+      - VectorStinger.Core/**
+      - VectorStinger.Infrastructure.DataAccess/**
+      - VectorStinger.Container/Dockerfile
+      - .Deploy/azure-pipelines-stage.yml
+
+# No trigger automático en PRs
+pr: none
+
+pool:
+  name: 'Azure Pipelines'
+
+variables:
+  # Azure Configuration
+  azureSubscription: 'Suscripcion-Platheo'  # Cambiado: sin acento, con guión
+  subscriptionId: '7430bafe-bc29-443c-93d1-a8cb3090136c'
+  resourceGroup: 'Platheo-tempalte'  # Nombre real del RG (con typo original)
+  
+  # ACR Configuration
+  acrName: 'acrplatheotemplatestg'
+  acrLoginServer: 'acrplatheotemplatestg-gafvh3d5d4hbb4fc.azurecr.io'
+  
+  # Image Configuration
+  imageName: 'platheo-api'
+  imageTag: 'stage-$(Build.BuildId)'
+  imageTagLatest: 'stage-latest'
+  
+  # Container App Configuration
+  containerAppName: 'ca-platheotemplate-stg'
+  containerAppEnvironment: 'Stage'
+  
+  # Build Configuration
+  dockerfilePath: 'VectorStinger.Container/Dockerfile'
+  buildContext: '$(Build.SourcesDirectory)'
+
+stages:
+  - stage: Build
+    displayName: 'Build & Push Docker Image'
+    jobs:
+      - job: BuildImage
+        displayName: 'Build Docker Image'
+        steps:
+          - checkout: self
+            displayName: 'Checkout Repository'
+            fetchDepth: 1
+
+          - task: Docker@2
+            displayName: 'Login to ACR'
+            inputs:
+              command: login
+              containerRegistry: '$(acrName)'
+
+          - task: Docker@2
+            displayName: 'Build Docker Image'
+            inputs:
+              command: build
+              repository: '$(imageName)'
+              dockerfile: '$(dockerfilePath)'
+              buildContext: '$(buildContext)'
+              tags: |
+                $(imageTag)
+                $(imageTagLatest)
+              arguments: '--build-arg ASPNETCORE_ENVIRONMENT=Stage'
+
+          - task: Docker@2
+            displayName: 'Push Image to ACR - Build Tag'
+            inputs:
+              command: push
+              repository: '$(imageName)'
+              containerRegistry: '$(acrName)'
+              tags: '$(imageTag)'
+
+          - task: Docker@2
+            displayName: 'Push Image to ACR - Latest Tag'
+            inputs:
+              command: push
+              repository: '$(imageName)'
+              containerRegistry: '$(acrName)'
+              tags: '$(imageTagLatest)'
+
+          - task: AzureCLI@2
+            displayName: 'Verify Image in ACR'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "?? Verificando imagen en ACR..."
+                az acr repository show-tags \
+                  --name $(acrName) \
+                  --repository $(imageName) \
+                  --orderby time_desc \
+                  --output table
+                
+                echo ""
+                echo "? Últimas imágenes en ACR:"
+                az acr repository show-tags \
+                  --name $(acrName) \
+                  --repository $(imageName) \
+                  --orderby time_desc \
+                  --top 5 \
+                  --output table
+
+  - stage: Deploy
+    displayName: 'Deploy to Azure Container Apps'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToACA
+        displayName: 'Deploy to Container Apps - Stage'
+        environment: 'Stage'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: 'Verify Microsoft.App Provider is Registered'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "?? Verificando registro de Microsoft.App provider..."
+                      
+                      # Verificar estado del provider
+                      PROVIDER_STATE=$(az provider show --namespace Microsoft.App --query "registrationState" -o tsv 2>/dev/null || echo "NotRegistered")
+                      
+                      echo "Estado actual: $PROVIDER_STATE"
+                      
+                      if [ "$PROVIDER_STATE" == "Registered" ]; then
+                        echo "? Microsoft.App provider está registrado"
+                        echo ""
+                        az provider show --namespace Microsoft.App --query "{Namespace:namespace, State:registrationState}" -o table
+                      else
+                        echo "? ERROR: Microsoft.App provider no está registrado"
+                        echo ""
+                        echo "El provider debe estar registrado manualmente por un administrador."
+                        echo "Estado actual: $PROVIDER_STATE"
+                        echo ""
+                        echo "?? Para registrar manualmente:"
+                        echo "   1. Ve a Azure Portal ? Subscriptions ? Resource providers"
+                        echo "   2. Busca 'Microsoft.App' y click en 'Register'"
+                        echo "   O ejecuta: az provider register --namespace Microsoft.App --wait"
+                        echo ""
+                        exit 1
+                      fi
+                      
+                - task: AzureCLI@2
+                  displayName: 'Get Current Container App Configuration'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "?? Obteniendo configuración actual de Container App..."
+                      
+                      # Obtener configuración actual
+                      az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.template" \
+                        -o json > current-config.json
+                      
+                      echo "? Configuración obtenida"
+                      cat current-config.json
+
+                - task: AzureCLI@2
+                  displayName: 'Verify and Fix ASPNETCORE_ENVIRONMENT Variable'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "?? Verificando variable ASPNETCORE_ENVIRONMENT..."
+                      
+                      # Obtener valor actual de ASPNETCORE_ENVIRONMENT
+                      CURRENT_ENV=$(az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.template.containers[0].env[?name=='ASPNETCORE_ENVIRONMENT'].value" \
+                        -o tsv)
+                      
+                      echo "Valor actual: '$CURRENT_ENV'"
+                      
+                      if [ "$CURRENT_ENV" != "Stage" ]; then
+                        echo "??  ASPNETCORE_ENVIRONMENT tiene valor incorrecto: '$CURRENT_ENV'"
+                        echo "? Corrigiendo a 'Stage'..."
+                        
+                        # Actualizar variable (esto se aplicará junto con la actualización de imagen)
+                        echo "La variable se corregirá en el siguiente paso de actualización"
+                      else
+                        echo "? ASPNETCORE_ENVIRONMENT ya tiene el valor correcto: 'Stage'"
+                      fi
+
+                - task: AzureCLI@2
+                  displayName: 'Update Container App with New Image'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "?? Desplegando nueva imagen a Container App..."
+                      
+                      # Actualizar Container App con nueva imagen y asegurar ASPNETCORE_ENVIRONMENT=Stage
+                      az containerapp update \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --image $(acrLoginServer)/$(imageName):$(imageTag) \
+                        --set-env-vars "ASPNETCORE_ENVIRONMENT=Stage" \
+                        --revision-suffix "build-$(Build.BuildId)"
+                      
+                      echo "? Container App actualizado exitosamente"
+                      echo "? ASPNETCORE_ENVIRONMENT configurado a 'Stage'"
+
+                - task: AzureCLI@2
+                  displayName: 'Verify Deployment'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "?? Verificando despliegue..."
+                      
+                      # Obtener URL de la aplicación
+                      APP_URL=$(az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.configuration.ingress.fqdn" \
+                        -o tsv)
+                      
+                      echo "?? URL de la aplicación: https://$APP_URL"
+                      
+                      # Esperar a que la revisión esté activa
+                      echo "? Esperando a que la nueva revisión esté activa..."
+                      sleep 30
+                      
+                      # Verificar ASPNETCORE_ENVIRONMENT
+                      echo "?? Verificando ASPNETCORE_ENVIRONMENT..."
+                      ASPNETCORE_ENV=$(az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.template.containers[0].env[?name=='ASPNETCORE_ENVIRONMENT'].value" \
+                        -o tsv)
+                      
+                      if [ "$ASPNETCORE_ENV" == "Stage" ]; then
+                        echo "? ASPNETCORE_ENVIRONMENT correctamente configurado: $ASPNETCORE_ENV"
+                      else
+                        echo "? ERROR: ASPNETCORE_ENVIRONMENT tiene valor incorrecto: $ASPNETCORE_ENV"
+                        echo "??  Se esperaba: Stage"
+                        exit 1
+                      fi
+                      
+                      # Verificar health check
+                      echo "??  Verificando health check..."
+                      HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://$APP_URL/health")
+                      
+                      if [ "$HTTP_CODE" == "200" ]; then
+                        echo "? Health check exitoso (HTTP $HTTP_CODE)"
+                      else
+                        echo "??  Health check retornó HTTP $HTTP_CODE"
+                        exit 1
+                      fi
+                      
+                      # Mostrar revisiones activas
+                      echo "?? Revisiones activas:"
+                      az containerapp revision list \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "[?properties.active].{Name:name, CreatedTime:properties.createdTime, TrafficWeight:properties.trafficWeight}" \
+                        -o table
+
+                - task: AzureCLI@2
+                  displayName: 'Show Deployment Summary'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "??????????????????????????????????????????????????????????"
+                      echo "?          ? Despliegue Completado Exitosamente        ?"
+                      echo "??????????????????????????????????????????????????????????"
+                      echo ""
+                      echo "?? Imagen desplegada:"
+                      echo "   $(acrLoginServer)/$(imageName):$(imageTag)"
+                      echo ""
+                      echo "?? Container App:"
+                      echo "   Nombre: $(containerAppName)"
+                      echo "   Ambiente: $(containerAppEnvironment)"
+                      echo "   Build ID: $(Build.BuildId)"
+                      echo ""
+                      echo "?? URL de acceso:"
+                      APP_URL=$(az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.configuration.ingress.fqdn" \
+                        -o tsv)
+                      echo "   https://$APP_URL"
+                      echo "   https://$APP_URL/health"
+                      echo "   https://$APP_URL/swagger (solo en Development)"
+                      echo ""
+                      echo "?? Variables de entorno críticas:"
+                      az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.template.containers[0].env[?name=='ASPNETCORE_ENVIRONMENT' || name=='Environment'].{Name:name, Value:value}" \
+                        -o table
+                      echo ""
+                      echo "?? Secrets configurados:"
+                      az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.template.containers[0].env[?secretRef!=null].{Name:name, SecretRef:secretRef}" \
+                        -o table

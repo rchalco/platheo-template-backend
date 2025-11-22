@@ -1,0 +1,57 @@
+# Build results
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+
+# Visual Studio
+**/.vs/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+**/*.userprefs
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker files
+**/Dockerfile
+**/.dockerignore
+**/docker-compose*.yml
+**/docker-helper.*
+
+# Documentación
+**/*.md
+**/README.md
+**/LICENSE
+
+# Node modules (si hay frontend)
+**/node_modules/
+**/npm-debug.log
+
+# Archivos de caché
+**/.vscode/
+**/launchSettings.json
+
+# Archivos temporales
+**/tmp/
+**/.tmp/
+**/*.tmp
+**/*.log
+
+# Certificados locales de desarrollo
+**/*.pfx
+
+# Archivos de configuración de desarrollo
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Folder de imágenes local
+images/
+uploads/
+
+# VectorStinger.Contaner folder
+VectorStinger.Contaner/

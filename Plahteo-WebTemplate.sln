@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11201.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Core", "VectorStinger.Core\VectorStinger.Core.csproj", "{A3D0DB7A-F1A3-4555-99F1-EA0F625B0B17}"
 EndProject
@@ -19,13 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Foundation.Ut
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Foundation.Factory", "VectorStinger.Foundation.Factory\VectorStinger.Foundation.Factory.csproj", "{C9C5EA31-E70A-4E1F-90DC-692B37AF0F5B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Host", "VectorStinger.Host\VectorStinger.Host.csproj", "{C68D07B5-C39B-43AB-97FD-11002E290D28}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Host.ServiceDefaults", "VectorStinger.Host.ServiceDefaults\VectorStinger.Host.ServiceDefaults.csproj", "{EA7C6830-9692-42F4-B797-473A26DF7A47}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Api.Service", "VectorStinger.Api.Service\VectorStinger.Api.Service.csproj", "{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Tests", "VectorStinger.Tests\VectorStinger.Tests.csproj", "{158E5C4A-01C8-4B3B-B468-3ED9658D5961}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Infrastructure.Tests", "VectorStinger.Infrastructure.Tests\VectorStinger.Infrastructure.Tests.csproj", "{725C0069-1E6F-4E21-A390-A0C4D57A6BEC}"
 EndProject
@@ -37,15 +31,46 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Infrastructure", "4. Inf
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Modules", "3. Modules", "{E76B1A13-6845-4684-99CE-1921B18D0DB9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosting", "Hosting", "{487BAF92-1ACB-42F7-AA18-35B7626089AE}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. SharedKernel", "5. SharedKernel", "{BB5D452F-8E1A-4B1A-B3BC-7A6FF168A092}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{9C6C6E48-5323-4A56-B72E-EBFCD7043F3A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{989946C7-92CB-4AAC-8FEA-1F3964EE990D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorSinger.Modules.WebTemplate", "VectorSinger.Modules.WebTemplate\VectorSinger.Modules.WebTemplate.csproj", "{C144912D-F386-46BE-A975-6B335A447F0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Host.ServiceDefaults", "VectorStinger.Host.ServiceDefaults\VectorStinger.Host.ServiceDefaults.csproj", "{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6. Containers", "6. Containers", "{E1C18815-C463-4717-829F-6EAABF024448}"
+	ProjectSection(SolutionItems) = preProject
+		VectorStinger.Container\.dockerignore = VectorStinger.Container\.dockerignore
+		.env.example = .env.example
+		VectorStinger.Container\ACR_DEPLOYMENT.md = VectorStinger.Container\ACR_DEPLOYMENT.md
+		VectorStinger.Container\docker-compose.yml = VectorStinger.Container\docker-compose.yml
+		VectorStinger.Container\docker-helper.ps1 = VectorStinger.Container\docker-helper.ps1
+		VectorStinger.Container\docker-helper.sh = VectorStinger.Container\docker-helper.sh
+		VectorStinger.Container\Dockerfile = VectorStinger.Container\Dockerfile
+		VectorStinger.Container\DOCKER_README.md = VectorStinger.Container\DOCKER_README.md
+		VectorStinger.Container\QUICKSTART.md = VectorStinger.Container\QUICKSTART.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "7. Deploy", "7. Deploy", "{331DC5EC-4651-4F90-874E-854768274B80}"
+	ProjectSection(SolutionItems) = preProject
+		.Deploy\ASPNETCORE_ENVIRONMENT_FIX.md = .Deploy\ASPNETCORE_ENVIRONMENT_FIX.md
+		.Deploy\azure-pipelines-stage.yml = .Deploy\azure-pipelines-stage.yml
+		.Deploy\AZURE_DEVOPS_TASKS_BEST_PRACTICES.md = .Deploy\AZURE_DEVOPS_TASKS_BEST_PRACTICES.md
+		.Deploy\create-service-connection.ps1 = .Deploy\create-service-connection.ps1
+		.Deploy\CREATE_AZURE_SERVICE_CONNECTION.md = .Deploy\CREATE_AZURE_SERVICE_CONNECTION.md
+		.Deploy\CREATE_SERVICE_CONNECTION.md = .Deploy\CREATE_SERVICE_CONNECTION.md
+		.Deploy\README.md = .Deploy\README.md
+		.Deploy\TROUBLESHOOTING_PROVIDERS.md = .Deploy\TROUBLESHOOTING_PROVIDERS.md
+		.Deploy\TROUBLESHOOTING_RESOURCE_GROUP.md = .Deploy\TROUBLESHOOTING_RESOURCE_GROUP.md
+		.Deploy\TROUBLESHOOTING_SERVICE_CONNECTION.md = .Deploy\TROUBLESHOOTING_SERVICE_CONNECTION.md
+		.Deploy\verify-config.ps1 = .Deploy\verify-config.ps1
+		.Deploy\verify-providers.ps1 = .Deploy\verify-providers.ps1
+		.Deploy\verify-resource-group.ps1 = .Deploy\verify-resource-group.ps1
+		.Deploy\verify-service-connections.ps1 = .Deploy\verify-service-connections.ps1
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Infrastructure.Bucket", "VectorStinger.Infrastructure.Bucket\VectorStinger.Infrastructure.Bucket.csproj", "{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -153,30 +178,6 @@ Global
 		{C9C5EA31-E70A-4E1F-90DC-692B37AF0F5B}.Release|x64.Build.0 = Release|Any CPU
 		{C9C5EA31-E70A-4E1F-90DC-692B37AF0F5B}.Release|x86.ActiveCfg = Release|Any CPU
 		{C9C5EA31-E70A-4E1F-90DC-692B37AF0F5B}.Release|x86.Build.0 = Release|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Debug|x64.Build.0 = Debug|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Debug|x86.Build.0 = Debug|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Release|x64.ActiveCfg = Release|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Release|x64.Build.0 = Release|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Release|x86.ActiveCfg = Release|Any CPU
-		{C68D07B5-C39B-43AB-97FD-11002E290D28}.Release|x86.Build.0 = Release|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Debug|x64.Build.0 = Debug|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Debug|x86.Build.0 = Debug|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Release|x64.ActiveCfg = Release|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Release|x64.Build.0 = Release|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Release|x86.ActiveCfg = Release|Any CPU
-		{EA7C6830-9692-42F4-B797-473A26DF7A47}.Release|x86.Build.0 = Release|Any CPU
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -189,18 +190,6 @@ Global
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}.Release|x64.Build.0 = Release|Any CPU
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}.Release|x86.ActiveCfg = Release|Any CPU
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D}.Release|x86.Build.0 = Release|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Debug|x64.Build.0 = Debug|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Debug|x86.Build.0 = Debug|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Release|Any CPU.Build.0 = Release|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Release|x64.ActiveCfg = Release|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Release|x64.Build.0 = Release|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Release|x86.ActiveCfg = Release|Any CPU
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961}.Release|x86.Build.0 = Release|Any CPU
 		{725C0069-1E6F-4E21-A390-A0C4D57A6BEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{725C0069-1E6F-4E21-A390-A0C4D57A6BEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{725C0069-1E6F-4E21-A390-A0C4D57A6BEC}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -225,6 +214,30 @@ Global
 		{C144912D-F386-46BE-A975-6B335A447F0E}.Release|x64.Build.0 = Release|Any CPU
 		{C144912D-F386-46BE-A975-6B335A447F0E}.Release|x86.ActiveCfg = Release|Any CPU
 		{C144912D-F386-46BE-A975-6B335A447F0E}.Release|x86.Build.0 = Release|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Debug|x64.Build.0 = Debug|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Debug|x86.Build.0 = Debug|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Release|x64.ActiveCfg = Release|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Release|x64.Build.0 = Release|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Release|x86.ActiveCfg = Release|Any CPU
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5}.Release|x86.Build.0 = Release|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Debug|x64.Build.0 = Debug|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Debug|x86.Build.0 = Debug|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Release|x64.ActiveCfg = Release|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Release|x64.Build.0 = Release|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Release|x86.ActiveCfg = Release|Any CPU
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -238,14 +251,12 @@ Global
 		{35A9DB6E-191B-46FF-85A8-0CAC408607AE} = {BB5D452F-8E1A-4B1A-B3BC-7A6FF168A092}
 		{4A0050A3-2C74-4FEE-BF46-D448A96F8C6A} = {BB5D452F-8E1A-4B1A-B3BC-7A6FF168A092}
 		{C9C5EA31-E70A-4E1F-90DC-692B37AF0F5B} = {BB5D452F-8E1A-4B1A-B3BC-7A6FF168A092}
-		{C68D07B5-C39B-43AB-97FD-11002E290D28} = {487BAF92-1ACB-42F7-AA18-35B7626089AE}
-		{EA7C6830-9692-42F4-B797-473A26DF7A47} = {487BAF92-1ACB-42F7-AA18-35B7626089AE}
 		{AF4FDC86-688B-4E7D-A5F2-A9C7F66C8E5D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{158E5C4A-01C8-4B3B-B468-3ED9658D5961} = {9C6C6E48-5323-4A56-B72E-EBFCD7043F3A}
 		{725C0069-1E6F-4E21-A390-A0C4D57A6BEC} = {989946C7-92CB-4AAC-8FEA-1F3964EE990D}
-		{9C6C6E48-5323-4A56-B72E-EBFCD7043F3A} = {487BAF92-1ACB-42F7-AA18-35B7626089AE}
 		{989946C7-92CB-4AAC-8FEA-1F3964EE990D} = {9727C221-936F-4FA4-9C0E-A99FA08E1900}
 		{C144912D-F386-46BE-A975-6B335A447F0E} = {E76B1A13-6845-4684-99CE-1921B18D0DB9}
+		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35} = {9727C221-936F-4FA4-9C0E-A99FA08E1900}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {57577AFB-9525-4F88-898A-7C0CBFD0E041}
