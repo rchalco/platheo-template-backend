@@ -19,25 +19,25 @@ namespace VectorStinger.Foundation.Utilities.Document
             public string values { get; set; }
         }
 
-        public enum keys
+        public enum Keys
         {
             enter = 13,
             SI,
             NO
         }
 
-        public static string GetCodeKey(keys key)
+        public static string GetCodeKey(Keys key)
         {
             string resul = string.Empty;
             switch (key)
             {
-                case keys.enter:
+                case Keys.enter:
                     resul = WordParts.tagEnter;
                     break;
-                case keys.SI:
+                case Keys.SI:
                     resul = WordParts.tagOK;
                     break;
-                case keys.NO:
+                case Keys.NO:
                     resul = WordParts.tagNO;
                     break;
                 default:

@@ -432,9 +432,9 @@ namespace VectorStinger.Foundation.Utilities.Document
                 file.writeFile(_data.ToString());
                 file.closeFile();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
 
             return file.NameFile.Replace(@"\\", @"\");

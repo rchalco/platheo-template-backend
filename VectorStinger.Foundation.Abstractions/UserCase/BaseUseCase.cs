@@ -117,7 +117,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
         #endregion
 
         #region Private Methods - State Management
-        private async Task SetStateAsync(StateUserCase newState, Activity activity, string useCaseName)
+        private async Task SetStateAsync(StateUserCase newState, Activity? activity, string useCaseName)
         {
             _state = newState;
             activity?.SetTag("usecase.state", _state.ToString());
@@ -127,7 +127,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
         #endregion
 
         #region Private Methods - Activity Configuration
-        private void ConfigureActivityTags(Activity activity, string useCaseName)
+        private void ConfigureActivityTags(Activity? activity, string useCaseName)
         {
             if (activity == null) return;
 
@@ -159,7 +159,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
         #endregion
 
         #region Private Methods - Validation
-        private async Task<Result> ValidateInputAsync(T input, Activity activity, string useCaseName)
+        private async Task<Result> ValidateInputAsync(T input, Activity? activity, string useCaseName)
         {
             _logger?.LogDebug("Iniciando validación para caso de uso: {UseCaseName}", useCaseName);
 
@@ -180,7 +180,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
             return Result.Ok(); // Placeholder for continuing execution
         }
 
-        private void ConfigureValidationErrorTelemetry(Activity activity, List<string> errors)
+        private void ConfigureValidationErrorTelemetry(Activity? activity, List<string> errors)
         {
             if (activity == null) return;
 
@@ -203,7 +203,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
         #endregion
 
         #region Private Methods - Business Logic
-        private async Task<Result<V>> ExecuteBusinessLogicAsync(T input, Activity activity, string useCaseName)
+        private async Task<Result<V>> ExecuteBusinessLogicAsync(T input, Activity? activity, string useCaseName)
         {
             _logger?.LogDebug("Iniciando ejecución de lógica de negocio para: {UseCaseName}", useCaseName);
 
@@ -227,7 +227,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
         #endregion
 
         #region Private Methods - Finalization
-        private async Task FinalizeExecutionAsync(Result<V> result, Activity activity, string useCaseName)
+        private async Task FinalizeExecutionAsync(Result<V> result, Activity? activity, string useCaseName)
         {
             if (result.IsSuccess)
             {
@@ -239,7 +239,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
             }
         }
 
-        private async Task FinalizeSuccessfulExecutionAsync(Activity activity, string useCaseName)
+        private async Task FinalizeSuccessfulExecutionAsync(Activity? activity, string useCaseName)
         {
             await SetStateAsync(StateUserCase.Completed, activity, useCaseName);
             activity?.SetStatus(ActivityStatusCode.Ok);
@@ -252,7 +252,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
             _logger?.LogInformation("✅ Caso de uso {UseCaseName} ejecutado exitosamente", useCaseName);
         }
 
-        private async Task FinalizeFailedExecutionAsync(Result<V> result, Activity activity, string useCaseName)
+        private async Task FinalizeFailedExecutionAsync(Result<V> result, Activity? activity, string useCaseName)
         {
             await SetStateAsync(StateUserCase.Crushed, activity, useCaseName);
 
@@ -276,7 +276,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
         #endregion
 
         #region Private Methods - Exception Handling
-        private async Task<Result<V>> HandleExceptionAsync(Exception ex, T input, Activity activity, string useCaseName)
+        private async Task<Result<V>> HandleExceptionAsync(Exception ex, T input, Activity? activity, string useCaseName)
         {
             await SetStateAsync(StateUserCase.Crushed, activity, useCaseName);
 
@@ -289,7 +289,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
             return Result.Fail<V>(ex.Message);
         }
 
-        private void ConfigureExceptionTelemetry(Exception ex, Activity activity)
+        private void ConfigureExceptionTelemetry(Exception ex, Activity? activity)
         {
             if (activity == null) return;
 
@@ -328,7 +328,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
                 useCaseName, ex.InnerException.GetType().Name, ex.InnerException.Message);
         }
 
-        private async Task ExecuteRollbackAsync(Activity activity, string useCaseName)
+        private async Task ExecuteRollbackAsync(Activity? activity, string useCaseName)
         {
             try
             {
