@@ -214,7 +214,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
                     }
                     finally
                     {
-                    _semaphore.Release();
+                        _semaphore.Release();
                     }
                 }
 
