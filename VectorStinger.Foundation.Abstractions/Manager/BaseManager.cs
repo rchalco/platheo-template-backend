@@ -2,13 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using VectorStinger.Foundation.Utilities.Exceptions;
 using VectorStinger.Foundation.Utilities.Wrapper;
+using System;
+using System.Threading.Tasks;
 
 namespace VectorStinger.Foundation.Abstractions.Manager
 {
     public interface IManager
     {
-        string ProcessError(Exception ex);
-        string ProcessError(Exception ex, Response response);
+        Task<string> ProcessErrorAsync(Exception ex);
+        Task<string> ProcessErrorAsync(Exception ex, Response response);
     }
     public abstract class BaseManager<T> : IManager where T : DbContext
     {
@@ -18,19 +20,19 @@ namespace VectorStinger.Foundation.Abstractions.Manager
             _repository = repository;
         }
 
-        public string ProcessError(Exception ex)
+        public async Task<string> ProcessErrorAsync(Exception ex)
         {
             ManagerException managerException = new ManagerException();
-            _repository?.Rollback();
+            await (_repository?.RollbackAsync() ?? Task.CompletedTask);
             return managerException.ProcessException(ex);
         }
 
-        public string ProcessError(Exception ex, Response response)
+        public async Task<string> ProcessErrorAsync(Exception ex, Response response)
         {
             ManagerException managerException = new ManagerException();
             response.State = ResponseType.Error;
             response.Message = managerException.ProcessException(ex);
-            _repository?.Rollback();
+            await (_repository?.RollbackAsync() ?? Task.CompletedTask);
             return response.Message;
         }
     }

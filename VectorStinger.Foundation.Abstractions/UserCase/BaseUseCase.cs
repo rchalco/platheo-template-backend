@@ -246,7 +246,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
 
             _logger?.LogDebug("Ejecutando Commit para caso de uso: {UseCaseName}", useCaseName);
 
-            var commitSuccess = _repository.Commit();
+            var commitSuccess = await _repository.CommitAsync();
             activity?.SetTag("usecase.commit_success", commitSuccess);
 
             _logger?.LogInformation("✅ Caso de uso {UseCaseName} ejecutado exitosamente", useCaseName);
@@ -270,7 +270,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
                     index + 1, useCaseName, error);
             }
 
-            var rollbackSuccess = _repository.Rollback();
+            var rollbackSuccess = await _repository.RollbackAsync();
             activity?.SetTag("usecase.rollback_success", rollbackSuccess);
         }
         #endregion
@@ -334,7 +334,7 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
             {
                 _logger?.LogDebug("Ejecutando Rollback debido a excepción en caso de uso: {UseCaseName}", useCaseName);
 
-                var rollbackSuccess = _repository.Rollback();
+                var rollbackSuccess = await _repository.RollbackAsync();
                 activity?.SetTag("usecase.rollback_success", rollbackSuccess);
 
                 _logger?.LogDebug("Rollback ejecutado {Status} para caso de uso: {UseCaseName}",
@@ -349,8 +349,6 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
                 activity?.SetTag("usecase.rollback_error", rollbackEx.Message);
                 activity?.SetTag("usecase.rollback_success", false);
             }
-
-            await Task.CompletedTask;
         }
         #endregion
 
