@@ -59,7 +59,7 @@ public class FakeDomainManager : BaseManager<BdPlatheoTemplateContext>, IFakeDom
                 "Creating fake domain: UserId={UserId}, TemplateId={TemplateId}, DomainName={DomainName}",
                 userId, templateId, fullDomainName);
 
-            _repository.SaveObject<FakeDomain>(new Entity<FakeDomain>
+            await _repository.SaveObjectAsync<FakeDomain>(new Entity<FakeDomain>
             {
                 EntityDB = fakeDomain,
                 stateEntity = StateEntity.add
@@ -86,7 +86,7 @@ public class FakeDomainManager : BaseManager<BdPlatheoTemplateContext>, IFakeDom
     {
         try
         {
-            var exists = _repository.SimpleSelect<FakeDomain>(d => d.DomainName == domainName);
+            var exists = await _repository.SimpleSelectAsync<FakeDomain>(d => d.DomainName == domainName);
             return exists.Count > 0;
         }
         catch (Exception ex)
@@ -103,7 +103,7 @@ public class FakeDomainManager : BaseManager<BdPlatheoTemplateContext>, IFakeDom
     {
         try
         {
-            var domain = _repository.SimpleSelect<FakeDomain>(x => x.DomainId == domainId);
+            var domain = await _repository.SimpleSelectAsync<FakeDomain>(x => x.DomainId == domainId);
 
             if (domain == null || domain.Count == 0)
             {
@@ -135,7 +135,7 @@ public class FakeDomainManager : BaseManager<BdPlatheoTemplateContext>, IFakeDom
 
             resultDomain.Value.IsAvailable = isAvailable;
 
-            _repository.SaveObject(new Entity<FakeDomain>
+            await _repository.SaveObjectAsync(new Entity<FakeDomain>
             {
                 EntityDB = resultDomain.Value,
                 stateEntity = StateEntity.modify

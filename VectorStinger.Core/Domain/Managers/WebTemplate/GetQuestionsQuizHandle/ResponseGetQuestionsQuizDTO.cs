@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Core.Domain.Managers.WebTemplate.GetQuestionsQuizHandle
 {
-    public class ResponseGetQuestionsQuizDTO
+    public record ResponseGetQuestionsQuizDTO
     {
-        public int QuestionId { get; set; }
-        public string QuestionText { get; set; } = string.Empty;
-        public string QuestionType { get; set; } = string.Empty;
-        public int IsClosed { get; set; }       
-        public int IsActive { get; set; }
-        public List<QuestionOptionDTO> Options { get; set; } = new();
+        public int QuestionId { get; init; }
+        public string QuestionText { get; init; } = string.Empty;
+        public string QuestionType { get; init; } = string.Empty;
+        public int IsClosed { get; init; }       
+        public int IsActive { get; init; }
+        public List<QuestionOptionDTO> Options { get; init; } = new();
     }
 
-    public class QuestionOptionDTO
+    public record QuestionOptionDTO
     {
-        public int OptionId { get; set; }
-        public string OptionText { get; set; } = string.Empty;
+        public int OptionId { get; init; }
+        public string OptionText { get; init; } = string.Empty;
     }
 }

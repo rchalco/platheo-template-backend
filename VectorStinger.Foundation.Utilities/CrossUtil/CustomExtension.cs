@@ -92,7 +92,7 @@ namespace VectorStinger.Foundation.Utilities.CrossUtil
                 case 11: nombreMes = "NOVIEMBRE"; break;
                 case 12: nombreMes = "DICIEMBRE"; break;
                 default:
-                    break; break;
+                    break;
             }
             return nombreMes;
 
@@ -116,7 +116,7 @@ namespace VectorStinger.Foundation.Utilities.CrossUtil
                 case 11: nombreMes = "NOVIEMBRE"; break;
                 case 12: nombreMes = "DICIEMBRE"; break;
                 default:
-                    break; break;
+                    break; 
             }
             return nombreMes;
 

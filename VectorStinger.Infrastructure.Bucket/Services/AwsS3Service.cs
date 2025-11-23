@@ -277,7 +277,7 @@ namespace VectorStinger.Infrastructure.Bucket.Services
                 {
                     ["ContentType"] = response.Headers.ContentType,
                     ["ContentLength"] = response.ContentLength.ToString(),
-                    ["LastModified"] = response.LastModified.ToString("o"),
+                    ["LastModified"] = response.LastModified?.ToString() ?? string.Empty, 
                     ["ETag"] = response.ETag
                 };
 

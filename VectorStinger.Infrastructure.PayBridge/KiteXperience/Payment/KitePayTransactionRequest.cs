@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Infrastructure.PayBridge.KiteXperience.Payment
 {
-    public class KitePayTransactionRequest
+    public record KitePayTransactionRequest
     {
     }
 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,15 +13,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="itext.bouncy-castle-adapter" Version="9.3.0" />
-    <PackageReference Include="itext.pdfhtml" Version="6.2.1" />
+    <PackageReference Include="itext.bouncy-castle-adapter" Version="9.4.0" />
+    <PackageReference Include="itext.pdfhtml" Version="6.3.0" />
     <PackageReference Include="Mapster" Version="7.4.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NLog" Version="6.0.5" />
-    <PackageReference Include="Npgsql" Version="9.0.4" />
+    <PackageReference Include="NLog" Version="6.0.6" />
+    <PackageReference Include="Npgsql" Version="10.0.0" />
     <PackageReference Include="NPOI" Version="2.7.5" />
   </ItemGroup>
 

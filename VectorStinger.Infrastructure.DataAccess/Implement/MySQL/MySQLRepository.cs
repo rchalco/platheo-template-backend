@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
 {
@@ -27,7 +29,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             mysqlDataInterface.ConnectionString = _dbContext.Database.GetDbConnection().ConnectionString;            
         }
 
-        public bool CallProcedure<T>(string nameProcedure, params object[] parameters) where T : class, new()
+        public async Task<bool> CallProcedureAsync<T>(string nameProcedure, params object[] parameters) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"MySQL.CallProcedure.{nameProcedure}");
             activity?.SetTag("db.operation", "call_procedure");
@@ -38,7 +40,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
                 _logger?.LogInformation("Ejecutando procedimiento almacenado: {ProcedureName} con {ParameterCount} parámetros", 
                     nameProcedure, parameters?.Length ?? 0);
                 
-                mysqlDataInterface.CallProcedure<T>(nameProcedure, parameters);
+                await Task.Run(() => mysqlDataInterface.CallProcedure<T>(nameProcedure, parameters));
                 
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return true;
@@ -51,7 +53,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             }
         }
 
-        public bool Commit()
+        public async Task<bool> CommitAsync(CancellationToken cancellationToken = default)
         {
             using var activity = ActivitySource.StartActivity("MySQL.Commit");
             activity?.SetTag("db.operation", "commit");
@@ -59,7 +61,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             try
             {
                 _logger?.LogInformation("Ejecutando Commit en MySQL");
-                var changes = _dbContext.SaveChanges();
+                var changes = await _dbContext.SaveChangesAsync(cancellationToken);
                 
                 activity?.SetTag("db.changes", changes);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -75,7 +77,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             }
         }
 
-        public List<T> GetDataByProcedure<T>(string nameProcedure, params object[] parameters) where T : class, new()
+        public async Task<List<T>> GetDataByProcedureAsync<T>(string nameProcedure, params object[] parameters) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"MySQL.GetDataByProcedure.{nameProcedure}");
             activity?.SetTag("db.operation", "select_procedure");
@@ -86,7 +88,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
                 _logger?.LogInformation("Obteniendo datos por procedimiento: {ProcedureName} con {ParameterCount} parámetros", 
                     nameProcedure, parameters?.Length ?? 0);
                 
-                var result = mysqlDataInterface.GetListByProcedure<T>(nameProcedure, parameters);
+                var result = await Task.Run(() => mysqlDataInterface.GetListByProcedure<T>(nameProcedure, parameters));
                 
                 activity?.SetTag("db.rows_affected", result.Count);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -104,7 +106,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             }
         }
 
-        public bool Rollback()
+        public async Task<bool> RollbackAsync(CancellationToken cancellationToken = default)
         {
             using var activity = ActivitySource.StartActivity("MySQL.Rollback");
             activity?.SetTag("db.operation", "rollback");
@@ -113,7 +115,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             {
                 _logger?.LogInformation("Ejecutando Rollback en MySQL");
                 activity?.SetStatus(ActivityStatusCode.Ok);
-                return true;
+                return await Task.FromResult(true);
             }
             catch (Exception ex)
             {
@@ -123,7 +125,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             }
         }
 
-        public List<T> SimpleSelect<T>(Expression<Func<T, bool>> predicate) where T : class, new()
+        public async Task<List<T>> SimpleSelectAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"MySQL.SimpleSelect.{typeof(T).Name}");
             activity?.SetTag("db.operation", "select");
@@ -133,7 +135,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             {
                 _logger?.LogInformation("Ejecutando SimpleSelect en tabla: {TableName}", typeof(T).Name);
                 
-                var result = _dbContext.Set<T>().Where(predicate).ToList();
+                var result = await _dbContext.Set<T>().Where(predicate).ToListAsync(cancellationToken);
                 
                 activity?.SetTag("db.rows_affected", result.Count);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -151,7 +153,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             }
         }
 
-        public List<T> GetAll<T>() where T : class, new()
+        public async Task<List<T>> GetAllAsync<T>(CancellationToken cancellationToken = default) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"MySQL.GetAll.{typeof(T).Name}");
             activity?.SetTag("db.operation", "select_all");
@@ -161,7 +163,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             {
                 _logger?.LogInformation("Obteniendo todos los registros de tabla: {TableName}", typeof(T).Name);
                 
-                var result = _dbContext.Set<T>().ToList();
+                var result = await _dbContext.Set<T>().ToListAsync(cancellationToken);
                 
                 activity?.SetTag("db.rows_affected", result.Count);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -179,7 +181,35 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
             }
         }
 
-        public bool SaveObject<T>(Entity<T> entity) where T : class, new()
+        public async Task<T?> GetByIdAsync<T>(params object[] keyValues) where T : class, new()
+        {
+            using var activity = ActivitySource.StartActivity($"MySQL.GetById.{typeof(T).Name}");
+            activity?.SetTag("db.operation", "select_by_id");
+            activity?.SetTag("db.table", typeof(T).Name);
+            
+            try
+            {
+                _logger?.LogInformation("Obteniendo entidad {TableName} por ID", typeof(T).Name);
+                
+                var result = await _dbContext.Set<T>().FindAsync(keyValues);
+                
+                activity?.SetTag("db.found", result != null);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                
+                _logger?.LogInformation("GetById en {TableName} {Result}", 
+                    typeof(T).Name, result != null ? "encontró la entidad" : "no encontró la entidad");
+                
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error en GetById para tabla: {TableName}", typeof(T).Name);
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<bool> SaveObjectAsync<T>(Entity<T> entity, CancellationToken cancellationToken = default) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"MySQL.SaveObject.{typeof(T).Name}");
             activity?.SetTag("db.table", typeof(T).Name);
@@ -206,19 +236,19 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.MySQL
                 if (entity.stateEntity == StateEntity.add)
                 {
                     _dbContext.Add(entity.EntityDB);
-                    var changes = _dbContext.SaveChanges();
+                    var changes = await _dbContext.SaveChangesAsync(cancellationToken);
                     activity?.SetTag("db.changes", changes);
                 }
                 else if (entity.stateEntity == StateEntity.modify)
                 {
                     _dbContext.Update(entity.EntityDB);
-                    var changes = _dbContext.SaveChanges();
+                    var changes = await _dbContext.SaveChangesAsync(cancellationToken);
                     activity?.SetTag("db.changes", changes);
                 }
                 else if (entity.stateEntity == StateEntity.remove)
                 {
                     _dbContext.Remove(entity.EntityDB);
-                    var changes = _dbContext.SaveChanges();
+                    var changes = await _dbContext.SaveChangesAsync(cancellationToken);
                     activity?.SetTag("db.changes", changes);
                 }
 

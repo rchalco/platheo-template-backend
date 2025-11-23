@@ -33,11 +33,7 @@ public partial class BdPlatheoTemplateContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserAnswer> UserAnswers { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=platheo-srvbd00.database.windows.net;Initial Catalog=BD-Platheo-Template;Persist Security Info=True;User ID=UsrSysAdmin;Password=Iodfa09//)=00;Pooling=False;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Command Timeout=0");
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EditableSection>(entity =>

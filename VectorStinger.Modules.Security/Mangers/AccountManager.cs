@@ -8,6 +8,9 @@ using VectorStinger.Core.Interfaces.Managers.Security;
 using VectorStinger.Foundation.Abstractions.Manager;
 using VectorStinger.Infrastructure.DataAccess.Interface;
 using VectorStinger.Infrastructure.DataAccess.Wrapper;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace VectorStinger.Modules.Security.Mangers
 {
@@ -20,9 +23,9 @@ namespace VectorStinger.Modules.Security.Mangers
             _providerAuthentication = providerAuthentication;
         }
 
-        public Result<ValidateTokenResponse> ValidateTokenAsync(ValidateTokenRequest request)
+        public async Task<Result<ValidateTokenResponse>> ValidateTokenAsync(ValidateTokenRequest request)
         {
-            var result = _repository.SimpleSelect<Session>(x => x.Token.ToString().Equals(request.Token));
+            var result = await _repository.SimpleSelectAsync<Session>(x => x.Token.ToString().Equals(request.Token));
 
             if (result == null || result.Count == 0)
             {
@@ -54,7 +57,7 @@ namespace VectorStinger.Modules.Security.Mangers
             }
 
             //Verificamos si el usuario ya existe en la base de datos
-            var userResult = _repository.SimpleSelect<User>(x => x.OauthProvider == request.Provider.ToString() && x.OauthId == verifyResult.Value.UserId);
+            var userResult = await _repository.SimpleSelectAsync<User>(x => x.OauthProvider == request.Provider.ToString() && x.OauthId == verifyResult.Value.UserId);
 
             // Si el usuario no existe, lo creamos
             if (userResult == null || userResult.Count == 0)
@@ -71,7 +74,7 @@ namespace VectorStinger.Modules.Security.Mangers
                     UserId = 0 // es un nuevo registro no tiene Id
                 };
 
-                _repository.SaveObject(new Entity<User>
+                await _repository.SaveObjectAsync(new Entity<User>
                 {
                     EntityDB = user,
                     stateEntity = StateEntity.add
@@ -90,7 +93,7 @@ namespace VectorStinger.Modules.Security.Mangers
                 SessionId = 0, // es un nuevo registro no tiene Id
             };
 
-            _repository.SaveObject(new Entity<Session>
+            await _repository.SaveObjectAsync(new Entity<Session>
             {
                 EntityDB = session,
                 stateEntity = StateEntity.add
