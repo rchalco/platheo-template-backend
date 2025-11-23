@@ -14,6 +14,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
 {
@@ -27,6 +29,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
         private TDbContext _dbContext;
         private readonly ILogger<MSSQLRepository<TDbContext>> _logger;
         private static readonly ActivitySource ActivitySource = new("MSSQLRepository");
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         #endregion
 
         public MSSQLRepository(TDbContext dbContext, string connectionString, ILogger<MSSQLRepository<TDbContext>> logger = null)
@@ -36,7 +39,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             _logger = logger;
         }
 
-        public bool CallProcedure<T>(string nameProcedure, params object[] parameters) where T : class, new()
+        public async Task<bool> CallProcedureAsync<T>(string nameProcedure, params object[] parameters) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.CallProcedure.{nameProcedure}");
             activity?.SetTag("db.system", "sqlserver");
@@ -59,7 +62,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
                 else
                 {
                     activity?.SetTag("db.execution_type", "ado_net");
-                    CallProcedureADO(nameProcedure, parameters);
+                    await CallProcedureADOAsync(nameProcedure, parameters);
                 }
 
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -74,7 +77,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        public bool Commit()
+        public async Task<bool> CommitAsync(CancellationToken cancellationToken = default)
         {
             using var activity = ActivitySource.StartActivity("SQLServer.Commit");
             activity?.SetTag("db.system", "sqlserver");
@@ -86,12 +89,17 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
 
                 if (_transaction != null)
                 {
-                    lock (_transaction)
+                    await _semaphore.WaitAsync(cancellationToken);
+                    try
                     {
-                        _transaction?.Commit();
-                        _transaction?.Dispose();
+                        await _transaction.CommitAsync(cancellationToken);
+                        await _transaction.DisposeAsync();
                         _transaction = null;
-                        _dbContext.Database.CloseConnection();
+                        await _dbContext.Database.CloseConnectionAsync();
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
                     }
                 }
 
@@ -107,7 +115,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        public List<T> GetAll<T>() where T : class, new()
+        public async Task<List<T>> GetAllAsync<T>(CancellationToken cancellationToken = default) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.GetAll.{typeof(T).Name}");
             activity?.SetTag("db.system", "sqlserver");
@@ -118,7 +126,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             {
                 _logger?.LogInformation("Obteniendo todos los registros de tabla: {TableName}", typeof(T).Name);
 
-                List<T> resul = _dbContext.Set<T>().ToList();
+                List<T> resul = await _dbContext.Set<T>().ToListAsync(cancellationToken);
 
                 activity?.SetTag("db.rows_affected", resul.Count);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -136,7 +144,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        public List<T> GetDataByProcedure<T>(string nameProcedure, params object[] parameters) where T : class, new()
+        public async Task<List<T>> GetDataByProcedureAsync<T>(string nameProcedure, params object[] parameters) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.GetDataByProcedure.{nameProcedure}");
             activity?.SetTag("db.system", "sqlserver");
@@ -156,7 +164,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
                 if (methodInfo == null)
                 {
                     activity?.SetTag("db.execution_type", "ado_net");
-                    lResul = GetListByProcedureADO<T>(nameProcedure, parameters);
+                    lResul = await GetListByProcedureADOAsync<T>(nameProcedure, parameters);
                 }
                 else
                 {
@@ -184,7 +192,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        public bool Rollback()
+        public async Task<bool> RollbackAsync(CancellationToken cancellationToken = default)
         {
             using var activity = ActivitySource.StartActivity("SQLServer.Rollback");
             activity?.SetTag("db.system", "sqlserver");
@@ -196,12 +204,17 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
 
                 if (_transaction != null)
                 {
-                    lock (_transaction)
+                    await _semaphore.WaitAsync(cancellationToken);
+                    try
                     {
-                        _transaction?.Rollback();
-                        _transaction?.Dispose();
+                        await _transaction.RollbackAsync(cancellationToken);
+                        await _transaction.DisposeAsync();
                         _transaction = null;
-                        _dbContext.Database.CloseConnection();
+                        await _dbContext.Database.CloseConnectionAsync();
+                    }
+                    finally
+                    {
+                    _semaphore.Release();
                     }
                 }
 
@@ -217,7 +230,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        public bool SaveObject<T>(Entity<T> entity) where T : class, new()
+        public async Task<bool> SaveObjectAsync<T>(Entity<T> entity, CancellationToken cancellationToken = default) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.SaveObject.{typeof(T).Name}");
             activity?.SetTag("db.system", "sqlserver");
@@ -244,17 +257,15 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
 
                 StateEntity _operation = entity.stateEntity;
                 
-                lock (_dbContext)
+                await _semaphore.WaitAsync(cancellationToken);
+                try
                 {
                     if (_transaction == null)
                     {
-                        _transaction = _dbContext.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+                        _transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
                         activity?.SetTag("db.transaction_started", "true");
                     }
-                }
 
-                lock (_transaction)
-                {
                     switch (_operation)
                     {
                         case StateEntity.add:
@@ -272,8 +283,12 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
                         default:
                             break;
                     }
-                    var changes = _dbContext.SaveChanges();
+                    var changes = await _dbContext.SaveChangesAsync(cancellationToken);
                     activity?.SetTag("db.changes", changes);
+                }
+                finally
+                {
+                    _semaphore.Release();
                 }
 
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -291,7 +306,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        public List<T> SimpleSelect<T>(Expression<Func<T, bool>> predicate) where T : class, new()
+        public async Task<List<T>> SimpleSelectAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.SimpleSelect.{typeof(T).Name}");
             activity?.SetTag("db.system", "sqlserver");
@@ -302,7 +317,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             {
                 _logger?.LogInformation("Ejecutando SimpleSelect en tabla: {TableName}", typeof(T).Name);
 
-                var result = _dbContext.Set<T>().Where(predicate).AsNoTracking().ToList();
+                var result = await _dbContext.Set<T>().Where(predicate).AsNoTracking().ToListAsync(cancellationToken);
 
                 activity?.SetTag("db.rows_affected", result.Count);
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -320,6 +335,35 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
+        public async Task<T?> GetByIdAsync<T>(params object[] keyValues) where T : class, new()
+        {
+            using var activity = ActivitySource.StartActivity($"SQLServer.GetById.{typeof(T).Name}");
+            activity?.SetTag("db.system", "sqlserver");
+            activity?.SetTag("db.operation", "select_by_id");
+            activity?.SetTag("db.table", typeof(T).Name);
+
+            try
+            {
+                _logger?.LogInformation("Obteniendo entidad {TableName} por ID", typeof(T).Name);
+
+                var result = await _dbContext.Set<T>().FindAsync(keyValues);
+
+                activity?.SetTag("db.found", result != null);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                
+                _logger?.LogInformation("GetById en {TableName} {Result}", 
+                    typeof(T).Name, result != null ? "encontró la entidad" : "no encontró la entidad");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error en GetById para tabla: {TableName}", typeof(T).Name);
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw;
+            }
+        }
+
         private object[] GetKeysFromEntity<T>(T entity)
         {
             List<object> resul = new List<object>();
@@ -332,7 +376,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             return resul.ToArray();
         }
 
-        private void CallProcedureADO(string nameProcedure, params object[] param)
+        private async Task CallProcedureADOAsync(string nameProcedure, params object[] param)
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.CallProcedureADO.{nameProcedure}");
             activity?.SetTag("db.system", "sqlserver");
@@ -346,16 +390,17 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
 
                 if (_dbContext.Database.GetDbConnection().State != ConnectionState.Open)
                 {
-                    _dbContext.Database.OpenConnection();
+                    await _dbContext.Database.OpenConnectionAsync();
                 }
 
-                if (_transaction == null)
+                await _semaphore.WaitAsync();
+                try
                 {
-                    _transaction = _dbContext.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-                }
+                    if (_transaction == null)
+                    {
+                        _transaction = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+                    }
 
-                lock (_transaction)
-                {
                     string commandText = "exec " + nameProcedure + " ";
                     List<SqlParameter> parameters = new List<SqlParameter>();
                     Dictionary<object, SqlParameter> parametersOutput = new Dictionary<object, SqlParameter>();
@@ -363,12 +408,16 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
                     sqlLog = commandText = commandText.Substring(0, commandText.Length - 1);
                     
                     activity?.SetTag("db.statement", sqlLog);
-                    _dbContext.Database.ExecuteSqlRaw(commandText, parameters.ToArray());
+                    await _dbContext.Database.ExecuteSqlRawAsync(commandText, parameters.ToArray());
 
                     foreach (var item in parametersOutput)
                     {
                         item.Key.GetType().GetProperty("Value").SetValue(item.Key, item.Value.Value == DBNull.Value ? null : item.Value.Value);
                     }
+                }
+                finally
+                {
+                    _semaphore.Release();
                 }
 
                 activity?.SetStatus(ActivityStatusCode.Ok);
@@ -383,7 +432,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        private List<T> GetListByProcedureADO<T>(string nameProcedure, params object[] param) where T : class, new()
+        private async Task<List<T>> GetListByProcedureADOAsync<T>(string nameProcedure, params object[] param) where T : class, new()
         {
             using var activity = ActivitySource.StartActivity($"SQLServer.GetListByProcedureADO.{nameProcedure}");
             activity?.SetTag("db.system", "sqlserver");
@@ -416,12 +465,12 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
                 DataTable dtResul = new DataTable();
                 SqlDataAdapter da = new SqlDataAdapter(sqlCommand);
                 dtResul.BeginLoadData();
-                da.Fill(dtResul);
+                await Task.Run(() => da.Fill(dtResul));
                 dtResul.EndLoadData();
 
                 foreach (DataRow item in dtResul.Rows)
                 {
-                    vListado.Add(LoadObject<T>(item));
+                    vListado.Add(MapDataRowToObject<T>(item));
                 }
 
                 DisposeConnection();
@@ -462,64 +511,77 @@ namespace VectorStinger.Infrastructure.DataAccess.Implement.SQLServer
             }
         }
 
-        private T LoadObject<T>(DataRow dr) where T : class, new()
+        private T MapDataRowToObject<T>(DataRow dr) where T : class, new()
         {
             T vEntity = new T();
-            var vPropiedades = vEntity.GetType().GetProperties();
-
+            
             try
             {
-                PropertyInfo[] propiedades = new PropertyInfo[vEntity.GetType().GetProperties().Count()];
-                vEntity.GetType().GetProperties().CopyTo(propiedades, 0);
+                var properties = typeof(T).GetProperties();
+                var tableColumns = dr.Table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToHashSet();
 
-
-                foreach (PropertyInfo item in propiedades)
+                foreach (PropertyInfo property in properties)
                 {
-
-                    if (!dr.Table.Columns.Cast<DataColumn>().Any(a => a.ColumnName.Equals(item.Name)))
+                    if (!tableColumns.Contains(property.Name))
                     {
                         continue;
                     }
-                    if (dr[item.Name] == null ||
-                        dr[item.Name] == DBNull.Value)
+
+                    var value = dr[property.Name];
+                    
+                    if (value == null || value == DBNull.Value)
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, null, null);
+                        property.SetValue(vEntity, null);
+                        continue;
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("Int32"))
+
+                    // Use direct type checking instead of string matching for better performance
+                    var propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                    
+                    if (propertyType == typeof(int))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, Convert.ToInt32(dr[item.Name].ToString()), null);
+                        property.SetValue(vEntity, Convert.ToInt32(value));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("Int64"))
+                    else if (propertyType == typeof(long))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, Convert.ToInt64(dr[item.Name].ToString()), null);
+                        property.SetValue(vEntity, Convert.ToInt64(value));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("Decimal"))
+                    else if (propertyType == typeof(decimal))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, Convert.ToDecimal(dr[item.Name]), null);
+                        property.SetValue(vEntity, Convert.ToDecimal(value));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("Single"))
+                    else if (propertyType == typeof(float))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, Convert.ToSingle(dr[item.Name]), null);
+                        property.SetValue(vEntity, Convert.ToSingle(value));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("StringBuilder"))
+                    else if (propertyType == typeof(double))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, new StringBuilder(dr[item.Name].ToString()), null);
+                        property.SetValue(vEntity, Convert.ToDouble(value));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("String"))
+                    else if (propertyType == typeof(StringBuilder))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, dr[item.Name].ToString(), null);
+                        property.SetValue(vEntity, new StringBuilder(value.ToString()));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("Boolean"))
+                    else if (propertyType == typeof(string))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, Convert.ToBoolean(dr[item.Name]), null);
+                        property.SetValue(vEntity, value.ToString());
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.Contains("DateTime"))
+                    else if (propertyType == typeof(bool))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, Convert.ToDateTime(dr[item.Name]), null);
+                        property.SetValue(vEntity, Convert.ToBoolean(value));
                     }
-                    else if (vEntity.GetType().GetProperty(item.Name).PropertyType.FullName.ToLower().Contains("byte"))
+                    else if (propertyType == typeof(DateTime))
                     {
-                        vEntity.GetType().GetProperty(item.Name).SetValue(vEntity, (byte[])dr[item.Name], null);
+                        property.SetValue(vEntity, Convert.ToDateTime(value));
+                    }
+                    else if (propertyType == typeof(byte[]))
+                    {
+                        property.SetValue(vEntity, (byte[])value);
+                    }
+                    else
+                    {
+                        // For any other type, try direct assignment
+                        property.SetValue(vEntity, value);
                     }
                 }
             }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Core.Domain.Managers.WebTemplate.RegisterTemplateWebHandle
 {
-    public class RequestRegisterTemplateWebDTO
+    public record RequestRegisterTemplateWebDTO
     {
         //Cometario de test Ronald
     }
