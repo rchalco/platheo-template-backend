@@ -14,7 +14,7 @@ namespace VectorStinger.Infrastructure.DataAccess.Interface
         Task<List<T>> GetDataByProcedureAsync<T>(string nameProcedure, params object[] parameters) where T : class, new();
         Task<List<T>> SimpleSelectAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : class, new();
         Task<List<T>> GetAllAsync<T>(CancellationToken cancellationToken = default) where T : class, new();
-        Task<T?> GetByIdAsync<T>(params object[] keyValues) where T : class, new();
+        Task<T> GetByIdAsync<T>(params object[] keyValues) where T : class, new();
         Task<bool> CommitAsync(CancellationToken cancellationToken = default);
         Task<bool> RollbackAsync(CancellationToken cancellationToken = default);
     }

@@ -39,7 +39,7 @@ namespace VectorStinger.Application.UserCase.WebTemplate.RegisterQuestionsQuiz
                 }).ToList()
             };
 
-            var result = _webTemplateManager.RegisterQuestionsQuizHandle(request);
+            var result = await _webTemplateManager.RegisterQuestionsQuizHandle(request);
 
             if (result.IsFailed)
             {

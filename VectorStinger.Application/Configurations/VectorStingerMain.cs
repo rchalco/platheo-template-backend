@@ -114,7 +114,7 @@ namespace VectorStinger.Application.Configurations
 
             // Register User Cases
             var useCaseTypes = allTypes
-                .Where(t => t.IsClass && !t.IsAbstract && typeof(IUserCase).IsAssignableFrom(t))
+                .Where(t => t.IsClass && !t.IsAbstract && typeof(IUseCase).IsAssignableFrom(t))
                 .ToList();
 
             foreach (var userCase in useCaseTypes)

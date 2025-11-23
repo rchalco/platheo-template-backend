@@ -50,11 +50,11 @@ public class TemplateManager : BaseManager<BdPlatheoTemplateContext>, ITemplateM
                 "Creating template: UserId={UserId}, FileUrl={FileUrl}, IsActive={IsActive}",
                 userId, templateFileUrl, isPublished);
 
-            _repository.SaveObject(new Entity<Template>
+            await _repository.SaveObjectAsync(new Entity<Template>
             {
                 EntityDB = template,
                 stateEntity = StateEntity.add
-            });
+            }, default);
 
             _logger.LogInformation("Template created successfully: TemplateId={TemplateId}", template.TemplateId);
 
@@ -74,7 +74,7 @@ public class TemplateManager : BaseManager<BdPlatheoTemplateContext>, ITemplateM
     {
         try
         {
-            var template = _repository.SimpleSelect<Template>(x => x.TemplateId == templateId);
+            var template = await _repository.SimpleSelectAsync<Template>(x => x.TemplateId == templateId);
 
             if (template == null || template.Count == 0)
             {
@@ -107,7 +107,7 @@ public class TemplateManager : BaseManager<BdPlatheoTemplateContext>, ITemplateM
             templateResult.Value.IsActive = isActive;
             templateResult.Value.UpdatedAt = DateTime.UtcNow;
 
-            _repository.SaveObject(new Entity<Template>
+            await _repository.SaveObjectAsync(new Entity<Template>
             {
                 EntityDB = templateResult.Value,
                 stateEntity = StateEntity.modify

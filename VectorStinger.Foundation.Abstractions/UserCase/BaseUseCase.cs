@@ -10,11 +10,11 @@ using System.Text.Json;
 
 namespace VectorStinger.Foundation.Abstractions.UserCase
 {
-    public interface IUserCase
+    public interface IUseCase
     {
     }
 
-    public abstract class BaseUseCase<T, V, W> : IUserCase
+    public abstract class BaseUseCase<T, V, W> : IUseCase
         where T : class, IUseCaseInput
         where V : class, IUseCaseOutput
         where W : UseCaseValidation<T>

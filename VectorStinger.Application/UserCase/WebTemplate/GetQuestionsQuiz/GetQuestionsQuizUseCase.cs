@@ -25,7 +25,7 @@ namespace VectorStinger.Application.UserCase.WebTemplate.GetQuestionsQuiz
 
         public override async Task<Result<GetQuestionsQuizOutput>> ExecuteBusinessAsync(GetQuestionsQuizInput input)
         {
-            var result = _webTemplateManager.GetQuestionsQuizHandle();
+            var result = await _webTemplateManager.GetQuestionsQuizHandle();
 
             if (result.IsFailed)
             {
