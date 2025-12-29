@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace VectorStinger.Foundation.Abstractions.UserCase
 {
+    [DataContract]
     public interface IUseCaseInput
-
     {
     }
 }
