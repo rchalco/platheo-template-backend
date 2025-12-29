@@ -1,10 +1,12 @@
 using VectorStinger.Foundation.Abstractions.UserCase;
+using System.Runtime.Serialization;
 
 namespace VectorStinger.Application.UserCase.WebTemplate.GetQuestionsQuiz
 {
+    [DataContract]
     public class GetQuestionsQuizInput : IUseCaseInput
     {
-        // Este input est· vacÌo pero es necesario para el mapeo autom·tico
-        // Se puede agregar filtros o par·metros en el futuro si es necesario
+        // Este input est√° vac√≠o pero es necesario para el mapeo autom√°tico
+        // Se puede agregar filtros o par√°metros en el futuro si es necesario
     }
 }
