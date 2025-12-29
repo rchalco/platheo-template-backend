@@ -18,7 +18,7 @@ public class Program
         var builder = Host.CreateApplicationBuilder(args);
         
         // Add service defaults for telemetry and configuration
-        builder.Services.AddServiceDefaults();
+        builder.AddServiceDefaults();
 
         // Configure logging
         builder.Logging.AddConsole();
@@ -46,7 +46,6 @@ public class Program
         }
 
         builder.Services.AddMemoryCache();
-        builder.Services.AddApplicationInsightsTelemetry();
 
         // Add hosted service for ZeroMQ
         builder.Services.AddHostedService<ZmqHostedService>(sp => 
