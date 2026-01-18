@@ -13,7 +13,7 @@ client.Connect("tcp://localhost:5555");
 // Create input
 ValidateTokenInput validateTokenInput = new ValidateTokenInput
 {
-    Token = "xxxxxxxxxxxxxxxxxxxxxxx"
+    Token = "85285e16-0353-4fc0-b563-25c7f514d4d9"
 };
 var inputBytes = MessagePackSerializer.Serialize(validateTokenInput);
 
