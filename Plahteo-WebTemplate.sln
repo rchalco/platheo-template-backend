@@ -74,6 +74,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Infrastructur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorStinger.Zmq.Service", "VectorStinger.Zmq.Service\VectorStinger.Zmq.Service.csproj", "{26CEBE2D-E809-4632-9FDA-7C25A973A9FB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "8. Test", "8. Test", "{187BB837-D7CB-4EED-ADD6-6B7CDEE00BB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "1. ConsoleTestZeroMQ", "1. ConsoleTestZeroMQ\1. ConsoleTestZeroMQ.csproj", "{DE58F481-38AB-4594-89E5-0B20DFFD831B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -252,6 +256,18 @@ Global
 		{26CEBE2D-E809-4632-9FDA-7C25A973A9FB}.Release|x64.Build.0 = Release|Any CPU
 		{26CEBE2D-E809-4632-9FDA-7C25A973A9FB}.Release|x86.ActiveCfg = Release|Any CPU
 		{26CEBE2D-E809-4632-9FDA-7C25A973A9FB}.Release|x86.Build.0 = Release|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Debug|x64.Build.0 = Debug|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Debug|x86.Build.0 = Debug|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Release|x64.ActiveCfg = Release|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Release|x64.Build.0 = Release|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Release|x86.ActiveCfg = Release|Any CPU
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -272,6 +288,7 @@ Global
 		{AAA7C713-A7B6-8AB1-A4E9-D870CB73B8B5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{1CC45B4E-23C2-4A65-A581-6AC70BC22F35} = {9727C221-936F-4FA4-9C0E-A99FA08E1900}
 		{26CEBE2D-E809-4632-9FDA-7C25A973A9FB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{DE58F481-38AB-4594-89E5-0B20DFFD831B} = {187BB837-D7CB-4EED-ADD6-6B7CDEE00BB6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {57577AFB-9525-4F88-898A-7C0CBFD0E041}

@@ -6,6 +6,7 @@ using NetMQ;
 using NetMQ.Sockets;
 using MessagePack;
 using System.Reflection;
+using System.Threading.Channels;
 using VectorStinger.Application.Configurations;
 using VectorStinger.Core.Configurations;
 using VectorStinger.Foundation.Abstractions.UserCase;
@@ -81,6 +82,9 @@ public class ZmqHostedService : BackgroundService
         _userCaseTypes = userCaseTypes;
     }
 
+    private record WorkItem(byte[] ClientId, string UseCaseName, byte[] RequestData);
+    private record WorkResult(byte[] ClientId, byte[] ResponseData);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var bindAddress = _configuration.GetValue<string>("ZmqSettings:BindAddress") ?? "tcp://*:5555";
@@ -96,80 +100,167 @@ public class ZmqHostedService : BackgroundService
         _logger.LogInformation("ZeroMQ service is listening on {BindAddress}", bindAddress);
         _logger.LogInformation("Registered {Count} use cases", _userCaseTypes.Count);
 
-        // Create a pool of worker tasks
+        // Create channels for work distribution
+        var workChannel = Channel.CreateUnbounded<WorkItem>(new UnboundedChannelOptions
+        {
+            SingleReader = false,
+            SingleWriter = true
+        });
+
+        var resultChannel = Channel.CreateUnbounded<WorkResult>(new UnboundedChannelOptions
+        {
+            SingleReader = true,
+            SingleWriter = false
+        });
+
+        // Start the single reader task (reads from RouterSocket)
+        var readerTask = Task.Run(async () => await ReadMessagesAsync(router, workChannel.Writer, stoppingToken), stoppingToken);
+
+        // Start the single writer task (writes to RouterSocket)
+        var writerTask = Task.Run(async () => await WriteMessagesAsync(router, resultChannel.Reader, stoppingToken), stoppingToken);
+
+        // Start worker tasks (process requests)
         var workerTasks = new List<Task>();
         for (int i = 0; i < workerThreads; i++)
         {
             int workerId = i;
-            workerTasks.Add(Task.Run(async () => await ProcessMessagesAsync(router, workerId, stoppingToken), stoppingToken));
+            workerTasks.Add(Task.Run(async () => 
+                await ProcessWorkerAsync(workerId, workChannel.Reader, resultChannel.Writer, stoppingToken), stoppingToken));
         }
 
         try
         {
-            await Task.WhenAll(workerTasks);
+            await Task.WhenAll(readerTask, writerTask, Task.WhenAll(workerTasks));
         }
         catch (OperationCanceledException)
         {
             _logger.LogInformation("ZeroMQ service is shutting down");
         }
+        finally
+        {
+            workChannel.Writer.TryComplete();
+            resultChannel.Writer.TryComplete();
+        }
     }
 
-    private async Task ProcessMessagesAsync(RouterSocket router, int workerId, CancellationToken stoppingToken)
+    private async Task ReadMessagesAsync(RouterSocket router, ChannelWriter<WorkItem> workWriter, CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("Reader started");
+
+        try
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    // Use polling with timeout to check cancellation
+                    if (!router.TryReceiveFrameBytes(TimeSpan.FromMilliseconds(100), out var clientIdFrame))
+                    {
+                        continue;
+                    }
+
+                    var emptyFrame = router.ReceiveFrameBytes();
+                    var useCaseNameFrame = router.ReceiveFrameString();
+                    var requestDataFrame = router.ReceiveFrameBytes();
+
+                    _logger.LogDebug("Reader received request for use case: {UseCaseName}", useCaseNameFrame);
+
+                    // Write to work channel
+                    var workItem = new WorkItem(clientIdFrame, useCaseNameFrame, requestDataFrame);
+                    await workWriter.WriteAsync(workItem, stoppingToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogError(ex, "Reader encountered an error");
+                    await Task.Delay(100, stoppingToken);
+                }
+            }
+        }
+        finally
+        {
+            workWriter.TryComplete();
+            _logger.LogInformation("Reader stopped");
+        }
+    }
+
+    private async Task WriteMessagesAsync(RouterSocket router, ChannelReader<WorkResult> resultReader, CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("Writer started");
+
+        try
+        {
+            await foreach (var result in resultReader.ReadAllAsync(stoppingToken))
+            {
+                try
+                {
+                    // Send response back to client
+                    router.SendMoreFrame(result.ClientId)
+                          .SendMoreFrame(Array.Empty<byte>())
+                          .SendFrame(result.ResponseData);
+
+                    _logger.LogDebug("Writer sent response to client");
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogError(ex, "Writer encountered an error sending response");
+                }
+            }
+        }
+        finally
+        {
+            _logger.LogInformation("Writer stopped");
+        }
+    }
+
+    private async Task ProcessWorkerAsync(int workerId, ChannelReader<WorkItem> workReader, 
+        ChannelWriter<WorkResult> resultWriter, CancellationToken stoppingToken)
     {
         _logger.LogInformation("Worker {WorkerId} started", workerId);
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            await foreach (var workItem in workReader.ReadAllAsync(stoppingToken))
             {
-                // Use polling with timeout to check cancellation
-                if (!router.TryReceiveFrameBytes(TimeSpan.FromMilliseconds(100), out var clientIdFrame))
-                {
-                    continue;
-                }
-
-                var emptyFrame = router.ReceiveFrameBytes();
-                var useCaseNameFrame = router.ReceiveFrameString();
-                var requestDataFrame = router.ReceiveFrameBytes();
-
-                _logger.LogDebug("Worker {WorkerId} received request for use case: {UseCaseName}", 
-                    workerId, useCaseNameFrame);
-
-                byte[] responseData;
                 try
                 {
-                    responseData = await ProcessRequestAsync(useCaseNameFrame, requestDataFrame);
+                    _logger.LogDebug("Worker {WorkerId} processing request for use case: {UseCaseName}", 
+                        workerId, workItem.UseCaseName);
+
+                    byte[] responseData;
+                    try
+                    {
+                        responseData = await ProcessRequestAsync(workItem.UseCaseName, workItem.RequestData);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Worker {WorkerId} error processing request for {UseCaseName}", 
+                            workerId, workItem.UseCaseName);
+                        
+                        var errorResponse = new { IsSuccess = false, Error = ex.Message };
+                        responseData = MessagePackSerializer.Serialize(errorResponse);
+                    }
+
+                    // Write result to result channel
+                    var result = new WorkResult(workItem.ClientId, responseData);
+                    await resultWriter.WriteAsync(result, stoppingToken);
+
+                    _logger.LogDebug("Worker {WorkerId} completed request for use case: {UseCaseName}", 
+                        workerId, workItem.UseCaseName);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    _logger.LogError(ex, "Worker {WorkerId} error processing request for {UseCaseName}", 
-                        workerId, useCaseNameFrame);
-                    
-                    var errorResponse = new { IsSuccess = false, Error = ex.Message };
-                    responseData = MessagePackSerializer.Serialize(errorResponse);
+                    _logger.LogError(ex, "Worker {WorkerId} encountered an error", workerId);
                 }
-
-                // Send response back to client
-                router.SendMoreFrame(clientIdFrame)
-                      .SendMoreFrame(Array.Empty<byte>())
-                      .SendFrame(responseData);
-
-                _logger.LogDebug("Worker {WorkerId} sent response for use case: {UseCaseName}", 
-                    workerId, useCaseNameFrame);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Worker {WorkerId} encountered an error", workerId);
-                await Task.Delay(100, stoppingToken); // Small delay to prevent tight loop on error
             }
         }
-
-        _logger.LogInformation("Worker {WorkerId} stopped", workerId);
+        finally
+        {
+            _logger.LogInformation("Worker {WorkerId} stopped", workerId);
+        }
     }
 
     private async Task<byte[]> ProcessRequestAsync(string useCaseName, byte[] requestData)
     {
-        // Find the use case type
         var useCaseType = _userCaseTypes.FirstOrDefault(t => t.Name == useCaseName);
         if (useCaseType == null)
         {
@@ -196,40 +287,56 @@ public class ZmqHostedService : BackgroundService
 
         using var scope = _serviceProvider.CreateScope();
         var serviceProvider = scope.ServiceProvider;
-        var userCaseInstance = serviceProvider.GetRequiredService(useCaseType);
 
         try
         {
-            // Deserialize input using MessagePack
             var input = MessagePackSerializer.Deserialize(inputParameterType, requestData);
-            
-            // Invoke the method
-            var resultTask = (Task)handleMethod.Invoke(userCaseInstance, new object[] { input! })!;
-            await resultTask;
+            var useCaseInstance = serviceProvider.GetRequiredService(useCaseType);
 
-            // Get the result
+            var resultTask = (Task)handleMethod.Invoke(useCaseInstance, new object[] { input! })!;
+            await resultTask.ConfigureAwait(false);
+
             var resultProperty = resultTask.GetType().GetProperty("Result");
             var result = resultProperty?.GetValue(resultTask);
 
-            // Extract success, errors, and value
-            var resultType = resultTask.GetType().GetProperty("Result")?.PropertyType;
-            var successProperty = resultType?.GetProperty("IsSuccess");
-            var errorsProperty = resultType?.GetProperty("Errors");
-            var valueProperty = resultType?.GetProperty("Value");
-
-            var isSuccess = (bool)successProperty?.GetValue(result)!;
-            var errors = isSuccess ? null : errorsProperty?.GetValue(result);
-            var value = isSuccess ? valueProperty?.GetValue(result) : null;
-
-            // Serialize response using MessagePack
-            var response = new
+            // Extraer el valor del Result<T> usando reflection
+            if (result != null)
             {
-                IsSuccess = isSuccess,
-                Value = value,
-                Errors = errors
-            };
+                var resultType = result.GetType();
+                
+                // Verificar si es un Result<T> de FluentResults
+                if (resultType.IsGenericType && resultType.GetGenericTypeDefinition().Name == "Result`1")
+                {
+                    var isSuccessProperty = resultType.GetProperty("IsSuccess");
+                    var isSuccess = (bool)(isSuccessProperty?.GetValue(result) ?? false);
+                    
+                    if (isSuccess)
+                    {
+                        // Extraer el valor del resultado exitoso
+                        var valueProperty = resultType.GetProperty("Value");
+                        var value = valueProperty?.GetValue(result);
+                        
+                        // Serializar solo el valor, no el Result<T>
+                        return MessagePackSerializer.Serialize(value);
+                    }
+                    else
+                    {
+                        // Extraer los errores
+                        var errorsProperty = resultType.GetProperty("Errors");
+                        var errors = errorsProperty?.GetValue(result) as IEnumerable<object>;
+                        var errorMessages = errors?.Select(e => 
+                        {
+                            var msgProp = e.GetType().GetProperty("Message");
+                            return msgProp?.GetValue(e)?.ToString() ?? "Unknown error";
+                        }).ToList() ?? new List<string>();
+                        
+                        var errorResponse = new { IsSuccess = false, Errors = errorMessages };
+                        return MessagePackSerializer.Serialize(errorResponse);
+                    }
+                }
+            }
 
-            return MessagePackSerializer.Serialize(response);
+            return MessagePackSerializer.Serialize(result);
         }
         catch (Exception ex)
         {

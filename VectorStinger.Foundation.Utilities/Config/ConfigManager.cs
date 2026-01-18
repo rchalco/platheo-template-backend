@@ -14,7 +14,7 @@ namespace VectorStinger.Foundation.Utilities.Config
         {
             ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("appsettings.json");
-            configurationBuilder.AddJsonFile("appsettings.Development.json");
+            configurationBuilder.AddJsonFile("appsettings.Development.json", optional: true);
             return configurationBuilder.Build();
         }
     }
