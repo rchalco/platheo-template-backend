@@ -1,20 +1,25 @@
 ﻿using FluentResults;
-using VectorStinger.Infrastructure.DataAccess.Interface;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using VectorStinger.Foundation.Utilities;
-using VectorStinger.Foundation.Utilities.Config;
+using NPOI.SS.Formula.Functions;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using VectorStinger.Foundation.Utilities;
+using VectorStinger.Foundation.Utilities.Config;
+using VectorStinger.Infrastructure.DataAccess.Interface;
 
 namespace VectorStinger.Foundation.Abstractions.UserCase
 {
-    public interface IUseCase
+    public interface IUseCase<T, V, W>
+        where T : class, IUseCaseInput
+        where V : class, IUseCaseOutput
+        where W : UseCaseValidation<T>
     {
+        Task<Result<V>> ExecuteAsync(T input);
     }
 
-    public abstract class BaseUseCase<T, V, W> : IUseCase
+    public abstract class BaseUseCase<T, V, W> : IUseCase<T, V, W>
         where T : class, IUseCaseInput
         where V : class, IUseCaseOutput
         where W : UseCaseValidation<T>

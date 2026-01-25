@@ -8,6 +8,5 @@ namespace VectorStinger.Foundation.Abstractions.UserCase
 {
     public interface IUseCaseOutput
     {
-
     }
 }
